@@ -1,0 +1,59 @@
+flowchart TB
+    Internet["Internet"] --> IGW["Internet Gateway"]
+    IGW --> ALB["Application Load Balancer"]
+    
+    subgraph VPC["VPC: 10.0.0.0/16"]
+        
+        subgraph PublicSubnets["Public Subnets"]
+            subgraph Pub1["AZ-A: 10.0.1.0/24"]
+                NAT1["NAT Gateway"]
+            end
+            subgraph Pub2["AZ-B: 10.0.2.0/24"]
+                NAT2["NAT Gateway"]
+            end
+            subgraph Pub3["AZ-C: 10.0.3.0/24"]
+                NAT3["NAT Gateway"]
+            end
+        end
+
+        subgraph PrivateSubnets["Private Subnets - Application"]
+            subgraph Priv1["AZ-A: 10.0.10.0/24"]
+                EKS1["EKS Worker Nodes"]
+            end
+            subgraph Priv2["AZ-B: 10.0.11.0/24"]
+                EKS2["EKS Worker Nodes"]
+            end
+            subgraph Priv3["AZ-C: 10.0.12.0/24"]
+                EKS3["EKS Worker Nodes"]
+            end
+        end
+
+        subgraph DatabaseSubnets["Private Subnets - Database"]
+            subgraph DB1["AZ-A: 10.0.20.0/24"]
+                RDS["RDS PostgreSQL"]
+            end
+        end
+
+        ALB
+    end
+
+    ALB --> EKS1
+    ALB --> EKS2
+    ALB --> EKS3
+    EKS1 --> RDS
+    EKS2 --> RDS
+    EKS3 --> RDS
+    EKS1 --> NAT1
+    EKS2 --> NAT2
+    EKS3 --> NAT3
+    NAT1 --> IGW
+    NAT2 --> IGW
+    NAT3 --> IGW
+
+    classDef public fill:#90EE90,stroke:#333
+    classDef private fill:#FFB6C1,stroke:#333
+    classDef database fill:#87CEEB,stroke:#333
+    
+    class Pub1,Pub2,Pub3 public
+    class Priv1,Priv2,Priv3 private
+    class DB1 database
