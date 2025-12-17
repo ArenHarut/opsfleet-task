@@ -1,0 +1,55 @@
+flowchart LR
+    subgraph Development["Development"]
+        Dev["Developer"]
+        Code["Code Changes"]
+    end
+
+    subgraph CI["Continuous Integration (GitHub Actions)"]
+        Push["Git Push"]
+        Lint["Lint &<br/>Static Analysis"]
+        Test["Unit &<br/>Integration Tests"]
+        Build["Build<br/>Container Image"]
+        Scan["Security Scan<br/>(Trivy)"]
+        Push_ECR["Push to ECR"]
+    end
+
+    subgraph CD["Continuous Delivery (GitOps)"]
+        Update["Update K8s<br/>Manifests"]
+        ArgoCD["ArgoCD<br/>Sync"]
+    end
+
+    subgraph Deployment["Deployment (EKS)"]
+        Dev_NS["Dev Namespace"]
+        Stage_NS["Staging Namespace"]
+        Prod_NS["Production Namespace"]
+    end
+
+    subgraph Validation["Post-Deployment"]
+        Health["Health Checks"]
+        Smoke["Smoke Tests"]
+        Monitor["Monitoring"]
+        Rollback["Auto Rollback<br/>(on failure)"]
+    end
+
+    Dev --> Code --> Push
+    Push --> Lint --> Test --> Build --> Scan --> Push_ECR
+    Push_ECR --> Update --> ArgoCD
+    
+    ArgoCD --> Dev_NS
+    ArgoCD --> Stage_NS
+    ArgoCD --> Prod_NS
+    
+    Dev_NS & Stage_NS & Prod_NS --> Health --> Smoke --> Monitor
+    Monitor -.-> Rollback -.-> ArgoCD
+
+    classDef dev fill:#E8F5E9,stroke:#2E7D32
+    classDef ci fill:#E3F2FD,stroke:#1565C0
+    classDef cd fill:#FFF3E0,stroke:#EF6C00
+    classDef deploy fill:#F3E5F5,stroke:#7B1FA2
+    classDef validate fill:#FFEBEE,stroke:#C62828
+
+    class Development dev
+    class CI ci
+    class CD cd
+    class Deployment deploy
+    class Validation validate
