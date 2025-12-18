@@ -36,18 +36,18 @@ flowchart TB
 
 ## 1. Cloud Environment Structure
 
-**Recommended: 4 AWS Accounts**
+**2 AWS Accounts:**
 
 | Account | Purpose |
 |---------|---------|
-| Management | Billing, Organizations, SCPs |
-| Shared Services | CI/CD, ECR, shared tooling |
-| Development | Dev/staging workloads |
-| Production | Production workloads only |
+| Management | Billing, Organizations, CI/CD, ECR, shared tooling |
+| Workloads | EKS cluster, RDS, application infrastructure |
 
-**Why?** Security isolation, blast radius reduction, clear cost visibility, easier compliance.
-
-**Startup alternative:** Start with 2 accounts (Management + Workloads), expand later.
+**Why 2 accounts?**
+- Simple for a startup with limited resources
+- Clear separation: management/tooling vs. application
+- Cost visibility between shared services and workloads
+- Can expand to 4 accounts later (separate Dev/Prod) when compliance requires
 
 ---
 
@@ -94,7 +94,7 @@ flowchart TB
 ## 3. Compute Platform (EKS)
 
 **Cluster Configuration:**
-- Kubernetes 1.29 (AWS managed control plane)
+- Kubernetes 1.33 (AWS managed control plane)
 - Secrets encrypted with KMS
 - Logs to CloudWatch
 
@@ -107,7 +107,7 @@ flowchart TB
 
 **Scaling:**
 - **HPA** (Horizontal Pod Autoscaler): Scales pods based on CPU/memory (2-100 pods)
-- **Cluster Autoscaler**: Scales nodes when pods can't be scheduled
+- **Cluster Autoscaler**: Scales nodes when pods can't be scheduled. Can be Karpenter.
 
 ---
 
@@ -123,10 +123,6 @@ flowchart TB
 - Automated daily backups (14-day retention)
 - Point-in-time recovery enabled
 - Manual snapshots before major deployments
-
-**Why RDS over Aurora?** Cost-effective for initial load. Migrate to Aurora at scale.
-
-**Why not PostgreSQL on EKS?** Stateful workloads are complex in K8s. RDS handles backups, patching, failover automatically.
 
 ---
 
@@ -175,9 +171,7 @@ flowchart LR
 
 | Type | Tool |
 |------|------|
-| Metrics | CloudWatch Container Insights |
 | Logging | CloudWatch Logs |
-| Tracing | AWS X-Ray |
 | Alerting | CloudWatch Alarms → SNS |
 
 **Key Alerts:** Error rate >1%, latency p99 >2s, CPU/memory >80%
@@ -197,8 +191,6 @@ flowchart LR
 | CloudWatch | $30 |
 | **Total** | **~$430/month** |
 
-**Cost Optimization:** Reserved Instances (40% off), Savings Plans (30% off), single NAT for dev.
-
 ---
 
 ## 9. Future Considerations
@@ -208,6 +200,7 @@ As traffic grows:
 2. Migrate to Aurora PostgreSQL for performance
 3. Add ElastiCache (Redis) for caching
 4. Multi-region deployment for global users
+5. Expand to 4 AWS accounts (separate Dev/Prod) for compliance
 
 ---
 
