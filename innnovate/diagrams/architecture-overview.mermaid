@@ -1,48 +1,75 @@
 flowchart TB
-    subgraph Development["Development"]
-        Dev["Developer"] --> Code["Code Changes"]
+    subgraph Internet["☁️ INTERNET"]
+        Users["👥 Users"]
     end
 
-    subgraph CI["Continuous Integration - GitHub Actions"]
-        Push["Git Push"]
-        Lint["Lint and Static Analysis"]
-        Test["Unit and Integration Tests"]
-        Build["Build Container Image"]
-        Scan["Security Scan - Trivy"]
-        Push_ECR["Push to ECR"]
-        
-        Push --> Lint --> Test
-        Test --> Build --> Scan --> Push_ECR
+    subgraph AWS["AWS Cloud"]
+        subgraph Edge["Edge Layer"]
+            R53["Route 53<br/>DNS"]
+            CF["CloudFront<br/>CDN + WAF"]
+            S3["S3 Bucket<br/>React SPA"]
+        end
+
+        subgraph VPC["VPC (10.0.0.0/16)"]
+            subgraph Public["Public Subnets"]
+                ALB["Application<br/>Load Balancer"]
+                NAT["NAT<br/>Gateways"]
+            end
+
+            subgraph Private["Private Subnets (Application)"]
+                subgraph EKS["EKS Cluster"]
+                    API["Flask API<br/>Pods"]
+                    Ingress["Ingress<br/>Controller"]
+                    HPA["HPA<br/>Auto-scaling"]
+                end
+            end
+
+            subgraph Database["Private Subnets (Database)"]
+                RDS_Primary["RDS PostgreSQL<br/>Primary"]
+                RDS_Standby["RDS PostgreSQL<br/>Standby"]
+            end
+        end
+
+        subgraph Services["Supporting Services"]
+            ECR["ECR<br/>Container Registry"]
+            SM["Secrets<br/>Manager"]
+            KMS["KMS<br/>Encryption"]
+            CW["CloudWatch<br/>Monitoring"]
+            GD["GuardDuty<br/>Security"]
+        end
     end
 
-    subgraph CD["Continuous Delivery - GitOps"]
-        Update["Update K8s Manifests"] --> ArgoCD["ArgoCD Sync"]
+    subgraph CICD["CI/CD Pipeline"]
+        GH["GitHub"]
+        GHA["GitHub<br/>Actions"]
+        ARGO["ArgoCD"]
     end
 
-    subgraph Deployment["Deployment - EKS"]
-        Cluster["EKS Cluster"] --> Pods["Application Pods"]
-    end
-
-    subgraph Validation["Post-Deployment"]
-        Health["Health Checks"] --> Smoke["Smoke Tests"]
-        Smoke --> Monitor["Monitoring"]
-        Monitor -.-> Rollback["Auto Rollback"]
-    end
-
-    Code --> Push
-    Push_ECR --> Update
-    ArgoCD --> Cluster
-    Pods --> Health
-    Rollback -.-> ArgoCD
-
-    classDef dev fill:#E8F5E9,stroke:#2E7D32
-    classDef ci fill:#E3F2FD,stroke:#1565C0
-    classDef cd fill:#FFF3E0,stroke:#EF6C00
-    classDef deploy fill:#F3E5F5,stroke:#7B1FA2
-    classDef validate fill:#FFEBEE,stroke:#C62828
-
-    class Development dev
-    class CI ci
-    class CD cd
-    class Deployment deploy
-    class Validation validate
+    Users --> R53
+    R53 --> CF
+    CF --> S3
+    CF --> ALB
+    ALB --> Ingress
+    Ingress --> API
+    API --> RDS_Primary
+    RDS_Primary <-.->|Sync Replication| RDS_Standby
+    
+    GH --> GHA
+    GHA --> ECR
+    ECR --> ARGO
+    ARGO --> EKS
+    
+    API -.-> SM
+    API -.-> CW
+    EKS -.-> NAT
+    
+    classDef aws fill:#FF9900,stroke:#232F3E,color:#232F3E
+    classDef security fill:#DD344C,stroke:#232F3E,color:white
+    classDef database fill:#3B48CC,stroke:#232F3E,color:white
+    classDef compute fill:#ED7100,stroke:#232F3E,color:white
+    classDef network fill:#8C4FFF,stroke:#232F3E,color:white
+    
+    class R53,CF,S3,ALB,NAT,ECR,SM,KMS,CW aws
+    class GD security
+    class RDS_Primary,RDS_Standby database
+    class API,EKS,Ingress,HPA compute
