@@ -60,7 +60,7 @@ aws configure
 # Or use environment variables:
 export AWS_ACCESS_KEY_ID="your-access-key"
 export AWS_SECRET_ACCESS_KEY="your-secret-key"
-export AWS_REGION="us-east-2"
+export AWS_REGION="us-east-1"
 ```
 
 ### 2. Update Configuration
@@ -84,7 +84,7 @@ locals {
 
 ```bash
 # Navigate to the environment
-cd terragrunt-environments/production/us-east-2/infra
+cd terragrunt-environments/production/us-east-1/infra
 
 # Review the plan for all modules
 terragrunt run-all plan
@@ -96,7 +96,7 @@ terragrunt run-all apply
 ### 4. Configure kubectl
 
 ```bash
-aws eks update-kubeconfig --name production --region us-east-2
+aws eks update-kubeconfig --name production --region us-east-1
 kubectl get nodes
 ```
 
@@ -255,7 +255,7 @@ kubectl get nodes -L kubernetes.io/arch,karpenter.sh/capacity-type,node.kubernet
 │   ├── terragrunt.hcl        # Root configuration
 │   └── production/
 │       ├── account.hcl       # AWS account settings
-│       └── us-east-2/
+│       └── us-east-1/
 │           ├── region.hcl    # Region settings
 │           └── infra/
 │               ├── env.hcl   # Environment settings
@@ -293,7 +293,7 @@ limits:
 
 ```bash
 # Destroy all resources
-cd terragrunt-environments/production/us-east-2/infra
+cd terragrunt-environments/production/us-east-1/infra
 terragrunt run-all destroy
 
 # Confirm destruction when prompted
