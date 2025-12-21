@@ -27,14 +27,14 @@ provider "aws" {
   region = "us-east-1"
 }
 
-# Kubernetes provider for kubectl resources
+# Kubernetes provider
 provider "kubernetes" {
   host                   = data.aws_eks_cluster.cluster.endpoint
   cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
   token                  = data.aws_eks_cluster_auth.cluster.token
 }
 
-# Helm provider for Karpenter chart
+# Helm provider
 provider "helm" {
   kubernetes {
     host                   = data.aws_eks_cluster.cluster.endpoint
