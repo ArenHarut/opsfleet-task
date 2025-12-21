@@ -19,11 +19,6 @@ variable "subnet_ids" {
   type        = list(string)
 }
 
-variable "karpenter_node_security_group_id" {
-  description = "Security group ID for Karpenter nodes"
-  type        = string
-}
-
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

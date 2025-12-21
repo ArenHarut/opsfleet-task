@@ -49,9 +49,14 @@ module "eks" {
   vpc_id     = var.vpc_id
   subnet_ids = var.subnet_ids
 
-  # Use the provided security groups instead of creating new ones
-  create_cluster_security_group = false
-  create_node_security_group    = false
+  # Let EKS module manage security groups
+  create_cluster_security_group = true
+  create_node_security_group    = true
+
+  # Tag node security group for Karpenter discovery
+  node_security_group_tags = {
+    "karpenter.sh/discovery" = var.environment
+  }
 
   # Tags - include Karpenter discovery tag
   tags = merge(var.tags, {
@@ -71,38 +76,4 @@ module "eks" {
       ]
     }
   }
-}
-
-#------------------------------------------------------------------------------
-# Security Group Rules for EKS Cluster to Karpenter Nodes Communication
-#------------------------------------------------------------------------------
-
-resource "aws_security_group_rule" "cluster_to_nodes" {
-  type                     = "ingress"
-  from_port                = 443
-  to_port                  = 443
-  protocol                 = "tcp"
-  source_security_group_id = module.eks.cluster_security_group_id
-  security_group_id        = var.karpenter_node_security_group_id
-  description              = "Allow EKS cluster to communicate with Karpenter nodes"
-}
-
-resource "aws_security_group_rule" "cluster_to_nodes_kubelet" {
-  type                     = "ingress"
-  from_port                = 10250
-  to_port                  = 10250
-  protocol                 = "tcp"
-  source_security_group_id = module.eks.cluster_security_group_id
-  security_group_id        = var.karpenter_node_security_group_id
-  description              = "Allow EKS cluster to communicate with kubelet on Karpenter nodes"
-}
-
-resource "aws_security_group_rule" "nodes_to_cluster" {
-  type                     = "ingress"
-  from_port                = 443
-  to_port                  = 443
-  protocol                 = "tcp"
-  source_security_group_id = var.karpenter_node_security_group_id
-  security_group_id        = module.eks.cluster_security_group_id
-  description              = "Allow Karpenter nodes to communicate with EKS cluster"
 }
