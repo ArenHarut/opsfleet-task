@@ -1,0 +1,33 @@
+# Example deployment that explicitly requests On-Demand instances
+# Best for critical, stateful workloads that cannot tolerate interruptions
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-ondemand
+  labels:
+    app: nginx-ondemand
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-ondemand
+  template:
+    metadata:
+      labels:
+        app: nginx-ondemand
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+      # This nodeSelector ensures pods run on On-Demand instances
+      nodeSelector:
+        karpenter.sh/capacity-type: on-demand

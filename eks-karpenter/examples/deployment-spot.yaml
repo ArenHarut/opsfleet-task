@@ -1,0 +1,39 @@
+# Example deployment that explicitly requests Spot instances
+# Best for fault-tolerant, cost-sensitive workloads
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-spot
+  labels:
+    app: nginx-spot
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx-spot
+  template:
+    metadata:
+      labels:
+        app: nginx-spot
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+      # This nodeSelector ensures pods run on Spot instances
+      nodeSelector:
+        karpenter.sh/capacity-type: spot
+      # Tolerate spot instance interruptions
+      tolerations:
+      - key: "karpenter.sh/capacity-type"
+        operator: "Equal"
+        value: "spot"
+        effect: "NoSchedule"
